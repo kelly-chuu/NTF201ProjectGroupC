@@ -53,7 +53,6 @@ def get_random_sequence(words):
     start = random.randint(0, len(word) - length) #0-length - (2 or 3)
     return word[start:start + length]
 
-
 class Player:
     """
     Player class to store information about each connected player.
@@ -110,6 +109,8 @@ def handle_player(player, players, lock, game_started):
         game_started: List containing boolean flag for game state
     """
     while True:
+        if game_started[0]:
+            return #makes sure this thread actually stops when the game starts
         try:
             # Receive data from player
             data = player.conn.recv(1024)
@@ -129,7 +130,7 @@ def handle_player(player, players, lock, game_started):
     # Only reach here if player actually disconnected
     player.disconnected = True
     player.active = False
-    print(f"ERROR: {player.name} disconnected!")
+    print(f"ERROR: {player.name} disconnected bitch!")
     broadcast(players, f"\nERROR: {player.name} disconnected! Server will shut down.\n")
 
     # Kill server if any player disconnects (as per requirements)
@@ -138,7 +139,7 @@ def handle_player(player, players, lock, game_started):
             p.conn.close()
         except:
             pass
-    print("Server shutting down due to player disconnect.") #should players disconnect too?
+    print("Server shutting down due to player disconnect.") #should players force exit if they disconnect too?
     os._exit(1)  # Force exit
 
 
@@ -175,8 +176,8 @@ def main():
         players.append(player)
         print(f"{name} joined from {addr}")
 
-        # Start a thread to handle this player's communication
-        threading.Thread(target=handle_player, args=(player, players, lock, game_started), daemon=True).start() #no clue what this does
+        #Starts a separate thread for every player
+        threading.Thread(target=handle_player, args=(player, players, lock, game_started), daemon=True).start()
 
         # Send welcome message with player count
         active_count = len([p for p in players if p.active and not p.disconnected])
@@ -317,7 +318,7 @@ def main():
             # Timeout - player loses a life
             print(f"[DEBUG] {player.name} timed out - losing life")
             player.lives -= 1
-            send_to_player(player, f"âœ— TIMEOUT! You lose a life. Lives remaining: {player.lives}\n") #why the weird characters?
+            send_to_player(player, f"TIMEOUT! You lose a life. Lives remaining: {player.lives}") #why the weird characters?
             broadcast([p for p in active_players if p != player and p.active and not p.disconnected],
                       f"{player.name} timed out! Lives remaining: {player.lives}\n")
             last_word_valid = False
