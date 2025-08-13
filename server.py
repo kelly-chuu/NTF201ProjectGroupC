@@ -74,6 +74,7 @@ def broadcast(players, msg):
         players: List of Player objects
         msg: Message string to send
     """
+    msg = msg.replace("\\n", "\n") #makes sure it actually prints a new line
     for p in players:
         if p.active and not p.disconnected:
             try:
@@ -90,6 +91,7 @@ def send_to_player(player, msg):
         player: Player object to send message to
         msg: Message string to send
     """
+    msg = msg.replace("\\n", "\n")  # makes sure it actually prints a new line
     if player.active and not player.disconnected:
         try:
             player.conn.sendall(msg.encode())
@@ -212,7 +214,7 @@ def main():
     player_names = [p.name for p in active_players]
     print(f"[DEBUG] About to send game start messages to: {player_names}")
     time.sleep(0.5)  # Small delay to ensure connections are ready
-    broadcast(players, f"\n=== GAME STARTED ===\n")
+    broadcast(players, f"=== GAME STARTED ===\n")
     time.sleep(0.1)
     broadcast(players, f"Players: {', '.join(player_names)}\n")
     time.sleep(0.1)
@@ -222,7 +224,7 @@ def main():
     time.sleep(0.1)
     broadcast(players, f"Used words cannot be repeated\n")
     time.sleep(0.1)
-    broadcast(players, f"Last player with lives wins!\n\n")
+    broadcast(players, f"Last player with lives wins!\n")
     time.sleep(0.1)
 
     # Main game loop
@@ -259,12 +261,12 @@ def main():
         remaining_players = [f"{p.name}({p.lives})" for p in active_players if
                              p.active and not p.disconnected and p.lives > 0]
         print(f"[DEBUG] Remaining players: {remaining_players}")
-        broadcast(players, f"\n=== ROUND {round_num} ===\n")
-        broadcast(players, f"Remaining players: {', '.join(remaining_players)}\n")
-        broadcast(players, f"Turn: {player.name} (Lives: {player.lives})\n")
+        broadcast(players, f"=== ROUND {round_num} ===\n")
+        broadcast(players, f"Remaining players: {', '.join(remaining_players)} \n")
+        broadcast(players, f"Turn: {player.name} (Lives: {player.lives}) \n")
 
         # Send turn message to current player
-        msg = f"Your turn, {player.name}! Sequence: '{seq}' (You have {ROUND_TIME} seconds)\n"
+        msg = f"Your turn, {player.name}! Sequence: '{seq}' (You have {ROUND_TIME} seconds) \n"
         msg += f"Type your word now: "
         print(f"[DEBUG] Sending turn message to {player.name}")
         send_to_player(player, msg)
@@ -272,7 +274,7 @@ def main():
         # Show other players whose turn it is
         print(f"[DEBUG] Broadcasting turn info to other players")
         broadcast([p for p in active_players if p != player and p.active and not p.disconnected],
-                  f"{player.name}'s turn! Sequence: '{seq}'\n")
+                  f"{player.name}'s turn! Sequence: '{seq}' \n")
 
         # Wait for player response with timeout
         print(f"[DEBUG] Waiting for {player.name}'s response...")
@@ -302,7 +304,7 @@ def main():
         # Check if player disconnected during their turn
         if player.disconnected:
             print(f"ERROR: {player.name} disconnected during turn!")
-            broadcast(players, f"\nERROR: {player.name} disconnected! Server will shut down.\n")
+            broadcast(players, f"ERROR: {player.name} disconnected! Server will shut down.")
             for p in players:
                 try:
                     p.conn.close() #connection closed but program still running?
@@ -326,7 +328,7 @@ def main():
             # Valid word - player keeps their life
             print(f"[DEBUG] {player.name} answered correctly: '{word}'")
             used_words.add(word)
-            send_to_player(player, f"âœ“ Correct! '{word}' is valid.\n") #why weird characters?
+            send_to_player(player, f"Correct! '{word}' is valid.\n") #why weird characters?
             broadcast([p for p in active_players if p != player and p.active and not p.disconnected],
                       f"{player.name} answered: '{word}'\n")
             last_word_valid = True
@@ -345,7 +347,7 @@ def main():
             else:
                 reason = "Invalid word"
 
-            send_to_player(player, f"âœ— Wrong! {reason}. You lose a life. Lives remaining: {player.lives}\n")
+            send_to_player(player, f"Wrong! {reason}. You lose a life. Lives remaining: {player.lives}\n")
             broadcast([p for p in active_players if p != player and p.active and not p.disconnected],
                       f"{player.name} is wrong! ({reason}) Lives remaining: {player.lives}\n")
             last_word_valid = False
@@ -361,7 +363,7 @@ def main():
     # Game over - find the winner
     winner = [p for p in active_players if p.active and not p.disconnected and p.lives > 0][0]
     broadcast(players, f"\n=== GAME OVER ===\n")
-    broadcast(players, f"ðŸ† Winner: {winner.name} ðŸ†\n")
+    broadcast(players, f"Winner: {winner.name}!! Congrats")
     broadcast(players, f"Thanks for playing!\n")
 
     # Give option to quit or start new game
@@ -377,6 +379,7 @@ def main():
             print("Starting new game...")
             #does this properly restart the game and connect everyone?
             main()  # Restart the game
+            #this calls main recursively... not the best
     except:
         print("Shutting down server...")
         for p in players:

@@ -13,7 +13,7 @@ def listen(sock):
             if not data:
                 break
             message = data.decode()
-            print(f"[DEBUG] Received: {repr(message)}")
+            #print(f"[DEBUG] Received: {repr(message)}")
             print(message, end="", flush=True)
         except Exception as e:
             print(f"[DEBUG] Listen error: {e}")
