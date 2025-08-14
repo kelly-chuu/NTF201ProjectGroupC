@@ -5,7 +5,7 @@ import time
 import os
 
 # Server configuration
-HOST = '127.0.0.1'  # Localhost IP address
+HOST = '0.0.0.0'  # Localhost IP address
 PORT = 65432  # Port number for server
 MAX_PLAYERS = 4  # Maximum number of players allowed
 MIN_PLAYERS = 4  # Minimum players required to start (must have exactly 4)
@@ -132,7 +132,7 @@ def handle_player(player, players, lock, game_started):
     # Only reach here if player actually disconnected
     player.disconnected = True
     player.active = False
-    print(f"ERROR: {player.name} disconnected bitch!")
+    print(f"ERROR: {player.name} disconnected!")
     broadcast(players, f"\nERROR: {player.name} disconnected! Server will shut down.\n")
 
     # Kill server if any player disconnects (as per requirements)
@@ -363,7 +363,7 @@ def main():
     # Game over - find the winner
     winner = [p for p in active_players if p.active and not p.disconnected and p.lives > 0][0]
     broadcast(players, f"\n=== GAME OVER ===\n")
-    broadcast(players, f"Winner: {winner.name}!! Congrats")
+    broadcast(players, f"Winner: {winner.name}!! Congrats\n")
     broadcast(players, f"Thanks for playing!\n")
 
     # Give option to quit or start new game

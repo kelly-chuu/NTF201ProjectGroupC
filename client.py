@@ -2,7 +2,7 @@ import socket
 import threading
 import sys
 
-HOST = '127.0.0.1'
+HOST = '192.168.3.9'
 PORT = 65432
 
 def listen(sock):
